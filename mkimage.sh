@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT-0
 # A boot image for one run on the Galaxy S9+ (star2lte) or the Galaxy Note9 (crownlte): the same file in both device
 # repositories, the phone it is for taken from the directory it is in (devices/<name>/mkimage.sh). It is the S9's
 # (devices/starlte/mkimage.sh) with two differences:
