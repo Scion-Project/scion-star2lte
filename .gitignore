@@ -5,3 +5,9 @@
 *~
 .DS_Store
 __pycache__/
+
+# The vendor firmware is Samsung's and Broadcom's and is not kept in this repository: tools/fetch-firmware.sh puts it
+# into firmware/<kind>/ (checked against SHA256SUMS there). Only each directory's README.md and SHA256SUMS are tracked.
+firmware/*/*
+!firmware/*/README.md
+!firmware/*/SHA256SUMS
