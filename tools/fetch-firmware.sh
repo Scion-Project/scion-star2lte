@@ -11,7 +11,8 @@
 #      vendor tree. DIR is searched recursively by file name; a file whose sum is not the pinned one is ignored.
 #   2. else the public community vendor trees, at the pinned commits below (GitHub, no login):
 #        ExyHyperBrick/proprietary_vendor_samsung_star2lte           (the audio DSP's images, the S9+'s speaker tuning)
-#        ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common  (Wi-Fi, Bluetooth, DSM, the codec's DSP)
+#        ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common  (Wi-Fi, Bluetooth, DSM, the codec's DSP, and
+#                                                                      gpsd, out of which the GNSS receiver's ESW is cut)
 #        ExyHyperBrick/android_kernel_samsung_exynos9810             (Samsung's GPL kernel: the sensor hub's image,
 #                                                                      as hex in a header file, turned into bytes here)
 #
@@ -20,7 +21,8 @@
 #
 #   tools/fetch-firmware.sh [--from DIR]... [--offline] [--check] [--force]
 #
-#   --from DIR  look in DIR first (also for bcm_sensorhub_a1.bin, or bbd_patch_file_star.h of Samsung's kernel)
+#   --from DIR  look in DIR first (also for bcm_sensorhub_a1.bin, or bbd_patch_file_star.h of Samsung's kernel, and for
+#               vendor/bin/hw/gpsd, the source of the GNSS ESW)
 #   --offline   do not download: only --from and what is already in place
 #   --check     only verify what is in place against the sums (exit 1 if anything is missing or wrong)
 #   --force     replace files that are in place and right as well
@@ -39,6 +41,9 @@ KERNEL_REPO=ExyHyperBrick/android_kernel_samsung_exynos9810
 KERNEL_REV=e5906667068efe49ad6a5494296f77965f2e5c5e
 KERNEL_HDR=drivers/sensorhub/brcm/bbdpl/q_os/bbd_patch_file_star.h
 SHUB=bcm_sensorhub_a1.bin
+# The GNSS receiver's ESW (its baseband's code, which gnssd loads through the boot ROM): three pieces of Broadcom's gpsd,
+# a4775_B0_ImageSegments, cut out of the pinned gpsd (or one given with --from) at these file offsets and sizes
+GPSD_PATH=proprietary/vendor/bin/hw/gpsd
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 TOP=$(cd "$HERE/.." && pwd)
@@ -99,6 +104,29 @@ open(sys.argv[2], "wb").write(bytes.fromhex(hexdigits))
 PY
 }
 
+# NAME -> "offset size" in gpsd's file (LineageOS's gpsd, "LHD2 ver. 108.20.545200"; the sums say whether it is that one)
+esw_piece() {
+	case $1 in
+	gnss-esw-0-5fdf0.bin) echo "$((0x1abff0)) 528" ;;     # segment 0, baseband 0x5fdf0
+	gnss-esw-1-78000.bin) echo "$((0x1ac200)) 25844" ;;   # segment 1, baseband 0x78000
+	gnss-esw-2-5fff0.bin) echo "$((0x1abfe4)) 12" ;;      # the word at 0x5fff0 (the retain/jump variant)
+	*) return 1 ;;
+	esac
+}
+
+esw_from_gpsd() { # GPSD NAME OUT
+	local off size
+	read -r off size < <(esw_piece "$2") || return 1
+	python3 -I - "$1" "$off" "$size" "$3" <<'PY'
+import sys
+data = open(sys.argv[1], "rb").read()
+off, size = int(sys.argv[2]), int(sys.argv[3])
+if len(data) < off + size:
+    sys.exit(1)
+open(sys.argv[4], "wb").write(data[off:off + size])
+PY
+}
+
 fetch() { # URL OUT
 	curl -fsSL --retry 3 --connect-timeout 20 -o "$2" "$1"
 }
@@ -113,6 +141,13 @@ candidate() { # NAME WANT
 			[ -n "$f" ] || continue
 			if [ "$(sha "$f")" = "$want" ]; then cp "$f" "$TMP/cand"; HOW="$f"; return 0; fi
 		done < <(find "$d" -type f -name "$name" 2>/dev/null)
+		if esw_piece "$name" >/dev/null; then
+			while IFS= read -r f; do
+				[ -n "$f" ] || continue
+				if esw_from_gpsd "$f" "$name" "$TMP/cand" 2>/dev/null && [ "$(sha "$TMP/cand")" = "$want" ]; then
+					HOW="$f (cut from gpsd)"; return 0; fi
+			done < <(find "$d" -type f -name gpsd 2>/dev/null)
+		fi
 		if [ "$name" = "$SHUB" ]; then
 			while IFS= read -r f; do
 				[ -n "$f" ] || continue
@@ -122,7 +157,11 @@ candidate() { # NAME WANT
 		fi
 	done
 	[ -z "$OFFLINE" ] || return 1
-	if [ "$name" = "$SHUB" ]; then
+	if esw_piece "$name" >/dev/null; then
+		[ -f "$TMP/gpsd" ] || fetch "$RAW/$COMMON_REPO/$COMMON_REV/$GPSD_PATH" "$TMP/gpsd" 2>/dev/null || return 1
+		esw_from_gpsd "$TMP/gpsd" "$name" "$TMP/cand" 2>/dev/null || return 1
+		HOW="$RAW/$COMMON_REPO/$COMMON_REV/$GPSD_PATH (cut from gpsd)"
+	elif [ "$name" = "$SHUB" ]; then
 		fetch "$RAW/$KERNEL_REPO/$KERNEL_REV/$KERNEL_HDR" "$TMP/hdr" 2>/dev/null || return 1
 		shub_from_header "$TMP/hdr" "$TMP/cand" 2>/dev/null || return 1
 		HOW="$RAW/$KERNEL_REPO/$KERNEL_REV/$KERNEL_HDR (hex of its <Blob=>)"
