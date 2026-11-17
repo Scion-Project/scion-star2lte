@@ -43,11 +43,11 @@ for f in "$L" "$K" "$RD" devices/starlte/prebuilt/SILICIUM_UEFI.fd devices/starl
 	[ -f "$f" ] || { echo "mkimage.sh: $f is missing (make loader, make kernel, userland/build.sh, tools/hakios-device.py sync starlte)" >&2; exit 1; }
 done
 ARGS="$*"
-if [ -z "$ARGS" ]; then
-	grep -q "^CONFIG_DEVICE=\"$NAME\"" .config 2>/dev/null || {
-		echo "mkimage.sh: .config is not the $NAME's: make ${NAME}_defconfig first, or give the boot-arguments" >&2; exit 1; }
-	ARGS=$(python3 tools/hakios-config.py args)
-fi
+# Merge arguments supplied by a run over this device's configuration defaults,
+# just as starlte does.  Previously, passing even one argument discarded every
+# Star2 default that belongs on the loader command line.
+if grep -q "^CONFIG_DEVICE=\"$NAME\"" .config 2>/dev/null; then FROM=; else FROM="--defconfig ${NAME}_defconfig"; fi
+ARGS=$(python3 tools/hakios-config.py args $FROM --with "$ARGS")
 case " $ARGS " in
 *" loader_platform="*) echo "mkimage.sh: loader_platform= is this script's to set" >&2; exit 2 ;;
 esac
