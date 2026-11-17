@@ -10,7 +10,7 @@ Files that the Scion project wrote entirely from scratch (every commit by the pr
 
 MIT-0 paths (top-level location, number of files):
 
-- `(top level)`: 4 files
+- `(top level)`: 2 files
 - `configs`: 2 files
 - `uefi`: 1 file
 
