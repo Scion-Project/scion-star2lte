@@ -11,7 +11,7 @@
 #      vendor tree. DIR is searched recursively by file name; a file whose sum is not the pinned one is ignored.
 #   2. else the public community vendor trees, at the pinned commits below (GitHub, no login):
 #        ExyHyperBrick/proprietary_vendor_samsung_star2lte           (the audio DSP's images, the S9+'s speaker tuning)
-#        ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common  (Wi-Fi, Bluetooth, DSM, the codec's DSP, and
+#        ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common  (Wi-Fi, Bluetooth, DSM, the codec's DSP, the MFC's, and
 #                                                                      gpsd, out of which the GNSS receiver's ESW is cut)
 #        ExyHyperBrick/android_kernel_samsung_exynos9810             (Samsung's GPL kernel: the sensor hub's image,
 #                                                                      as hex in a header file, turned into bytes here)
@@ -49,7 +49,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 TOP=$(cd "$HERE/.." && pwd)
 FW=$TOP/firmware
 FROM=()
-# the S9's firmware/ beside this tree (devices/starlte): files with the pinned sums are the same files (mfc_fw.bin has no public source)
+# the S9's firmware/ beside this tree (devices/starlte): files with the pinned sums are the same files (mfc_fw.bin among them)
 [ -d "$TOP/../starlte/firmware" ] && FROM+=("$(cd "$TOP/../starlte/firmware" && pwd)")
 OFFLINE=
 CHECK=
@@ -84,7 +84,7 @@ origin() {
 	AP_AUDIO_SLSI.bin|APBargeIn_AUDIO_SLSI.bin|APDV_AUDIO_SLSI.bin|APBiBF_AUDIO_SLSI.bin|SoundBoosterParam.bin|\
 	calliope_sram.bin|calliope_dram.bin|calliope_iva.bin|dsm_tune.bin)
 		echo "$STAR2LTE_REPO $STAR2LTE_REV proprietary/vendor/firmware/$1" ;;
-	dsm.bin|cs47l92-dsp1-trace.wmfw|bcm4361B2_murata.hcd|bcm4361B2_semco.hcd|bcmdhd_clm.blob|bcmdhd_sta.bin_b0|\
+	dsm.bin|mfc_fw.bin|cs47l92-dsp1-trace.wmfw|bcm4361B2_murata.hcd|bcm4361B2_semco.hcd|bcmdhd_clm.blob|bcmdhd_sta.bin_b0|\
 	bcmdhd_sta.bin_b2|nvram.txt_murata_r041_b2|nvram.txt_r02a_b2|nvram.txt_r02b_b2)
 		echo "$COMMON_REPO $COMMON_REV proprietary/vendor/firmware/$1" ;;
 	*) return 1 ;;
