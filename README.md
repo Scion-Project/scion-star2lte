@@ -1,11 +1,17 @@
 <!-- SPDX-License-Identifier: MIT-0 -->
 # Samsung Galaxy S9+ (star2lte, SM-G965F, Exynos 9810)
 
-**Nothing in this repository has run on an S9+.** Nobody working on HakiOS has one. Everything here is written from
-Samsung's device trees and the Galaxy S9 port ([scion-starlte](https://github.com/Scion-Project/scion-starlte)), which
-has run on an S9. Every area in `device.conf` is "missing" (its note says what is written for it), and every
-driver is off until its boot-argument. If you have an S9+ and want to try, read "First runs" below first, and keep
-your EFS backup off the phone.
+**This phone has run iOS 16.5.** Anan Jaser has run Scion on his own S9+ (an SM-G965N, the Korean model) and worked on it
+since 12 November 2026. `device.conf` records what was seen on that phone up to his build 28: display, all eight cores, touch,
+storage, Wi-Fi, battery, temperatures and the USB console working; the GPU, the speakers, Bluetooth, the cameras, the torch and
+the sensors in part (each note says what is missing); no mobile network. Those runs were his own builds (scion-kernel
+`star2-bringup`, `userland/build.sh ... DEVICE=star2lte`), not scion-installer's S9+ image, which nobody has reported running.
+iOS 27 has not been tried on an S9+.
+
+This repository was first written from Samsung's device trees and the Galaxy S9 port
+([scion-starlte](https://github.com/Scion-Project/scion-starlte)), before anyone had an S9+ to run it on; the sections below
+keep that record, and some of them still say what was expected rather than what was seen. If you have an S9+ and want to
+try, read "First runs" below first, and keep your EFS backup off the phone.
 
 **The repository.** This is the Galaxy S9+'s device repository, checked out at `devices/star2lte` of
 [Scion-Project/scion-kernel](https://github.com/Scion-Project/scion-kernel) (`devices/manifest.conf`,
