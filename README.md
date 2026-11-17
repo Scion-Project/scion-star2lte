@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT-0 -->
 # Samsung Galaxy S9+ (star2lte, SM-G965F, Exynos 9810)
 
 **Nothing in this repository has run on an S9+.** Nobody working on HakiOS has one. Everything here is written from
